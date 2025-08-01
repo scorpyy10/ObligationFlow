@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .badge-achieved {
+            background-color: #28a745;
+            color: white;
+        }
+        .badge-pending {
+            background-color: #ffc107;
+            color: black;
+        }
+        .badge-overdue {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            
+        }
+        .kanban-column {
+            flex: 1;
+            min-width: 200px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .kanban-column h5 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        .kanban-card {
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            border-left: 5px solid transparent;
+        }
+        .kanban-card:hover {
+            background-color: #f1f1f1;
+        }
+        .small-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+ 
+        /* Background Colors for Stages */
+        .status-init { background-color: #e9ecef; border-left-color: #6c757d; } /* Gray */
+        .status-ongoing { background-color: #cfe2ff; border-left-color: #17a2b8; } /* Blue */
+        .status-executed { background-color: #d4edda; border-left-color: #28a745; } /* Green */
+        .status-cancelled { background-color: #f8d7da; border-left-color: #dc3545; } /* Red */
+ 
+        .dragging {
+            opacity: 0.5;
+        }
+
+        .init-status {
+            background-color: #e9ecef;
+            border-left: 4px solid #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .ongoing-status {
+            background-color: #d0f4fa;
+            border-left: 4px solid #17a2b8;
+            margin-bottom: 20px;
+        }
+
+        .executed-status {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            margin-bottom: 20px;
+        }
+
+        .cancel-status {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+    <div class="container my-5">
+        <h2 class="text-center mb-4">Task Tracker Dashboard</h2>
+
+        <!-- Dashboard Tabs -->
+        <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="summary-tab" data-bs-toggle="tab" href="#summary" role="tab">Summary</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="milestones-tab" data-bs-toggle="tab" href="#milestones" role="tab">Milestones</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="task-status" data-bs-toggle="tab" href="#taskstatus" role="tab">Task Status</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- Summary Tab -->
+            <div class="tab-pane fade show active" id="summary" role="tabpanel">
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Risks</h5>
+                                <p class="card-text fs-3">15</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Obligations</h5>
+                                <p class="card-text fs-3">25</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Milestones</h5>
+                                <p class="card-text fs-3">10</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Penalties</h5>
+                                <p class="card-text fs-3">$12,000</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graphs -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <canvas id="taskDistributionChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="taskStatusChart"></canvas>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <canvas id="milestoneProgressChart"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="penaltiesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestones Tab -->
+            <div class="tab-pane fade" id="milestones" role="tabpanel">
+                <h4 class="mb-4">Milestones by Tasks</h4>
+                <div class="list-group">
+
+                    {% for milestone in milestones %}
+                    <!-- Task 1 -->
+                    <div class="list-group-item">
+                        {% for ms in milestone %}
+                            {% if forloop.first %}
+                                <h5 class="mb-3">Task: {{ ms.risk_tracking_record }}</h5>
+                            {% endif %}
+                        {% endfor %}
+                        <ul class="list-unstyled">
+                            {% for ms in milestone %}
+                                <li style="position: relative; list-style-type: none; height: 31px;">
+                                    {{ ms.title }} ({{ ms.due_date }})
+                                    {% if ms.due_date > today %}
+                                        <!-- Pending Badge -->
+                                        <span class="badge badge-pending" style="
+                                            display: inline-block;
+                                            margin-left: 10px;
+                                            padding: 5px 10px;
+                                            background-color: orange;
+                                            color: white;
+                                            border-radius: 12px;
+                                            right: 43px;
+                                            height: 25px;
+                                            font-size: 12px;">
+                                            Pending
+                                        </span>
+                                    {% else %}
+                                        <!-- Achieved Badge -->
+                                        <span class="badge badge-achieved" style="
+                                            display: inline-block;
+                                            margin-left: 10px;
+                                            padding: 5px 10px;
+                                            background-color: green;
+                                            color: white;
+                                            border-radius: 12px;
+                                            right: 43px;
+                                            height: 25px;
+                                            font-size: 12px;">
+                                            Achieved
+                                        </span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    {% endfor %}
+
+                   
+                </div>
+            </div>
+
+            <!-- Task Status Tab -->
+            <div class="tab-pane fade" id="taskstatus" role="tabpanel">
+                
+                <!-- kanban_board.html -->
+                <div class="columns">
+                    <div class="column">
+                        <h5 class="title is-5">Init</h5>
+                        {% for task in tasks %}
+                            {% if task.status == 'init' %}
+                                <div class="box kanban-card init-status" draggable="true" onclick="openTaskModal('{{ task.tracking_title }}', '{{ task.status }}', '{{ task.risk_mitigation_plan }}', '{{ task.start_date }}', '{{ task.end_date }}')">
+                                    <p><strong>{{ task.tracking_title }}</strong></p>
+                                   
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="column">
+                        <h5 class="title is-5">Ongoing</h5>
+                        {% for task in tasks %}
+                            {% if task.status == 'ongoing' %}
+                                <div class="box kanban-card ongoing-status" draggable="true" onclick="openTaskModal('{{ task.tracking_title }}', '{{ task.status }}', '{{ task.risk_mitigation_plan }}', '{{ task.start_date }}', '{{ task.end_date }}')">
+                                    <p><strong>{{ task.tracking_title }}</strong></p>
+                                    <!-- <p class="small-text">Status: {{ task.status }}</p> -->
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="column">
+                        <h5 class="title is-5">Executed</h5>
+                        {% for task in tasks %}
+                            {% if task.status == 'executed' %}
+                                <div class="box kanban-card  executed-status" draggable="true" onclick="openTaskModal('{{ task.tracking_title }}', '{{ task.status }}', '{{ task.risk_mitigation_plan }}', '{{ task.start_date }}', '{{ task.end_date }}')">
+                                    <p><strong>{{ task.tracking_title }}</strong></p>
+                                    <!-- <p class="small-text">Status: {{ task.status }}</p> -->
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="column">
+                        <h5 class="title is-5">Cancelled</h5>
+                        {% for task in tasks %}
+                            {% if task.status == 'cancelled' %}
+                                <div class="box kanban-card cancel-status" draggable="true" onclick="openTaskModal('{{ task.tracking_title }}', '{{ task.status }}', '{{ task.risk_mitigation_plan }}', '{{ task.start_date }}', '{{ task.end_date }}')">
+                                    <p><strong>{{ task.tracking_title }}</strong></p>
+                                    <!-- <p class="small-text">Status: {{ task.status }}</p> -->
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+                <!-- old code -->
+                    <!-- <div class="kanban-board">
+                        <div class="kanban-column" id="milestones-init">
+                            <h5>Init</h5>
+                            <div class="kanban-card status-init" draggable="true" onclick="openTaskModal('Start Project Phase 1', 'Init', 'Initiate project phase 1.')">
+                                <p><strong>Start Project Phase 1</strong></p>
+                                <p class="small-text">Status: Init</p>
+                            </div>
+                        </div>
+                        <div class="kanban-column" id="milestones-ongoing">
+                            <h5>Ongoing</h5>
+                            <div class="kanban-card status-ongoing" draggable="true" onclick="openTaskModal('Finalize Budget', 'Ongoing', 'Finalize the budget for the current project.')">
+                                <p><strong>Finalize Budget</strong></p>
+                                <p class="small-text">Status: Ongoing</p>
+                            </div>
+                        </div>
+                        <div class="kanban-column" id="milestones-executed">
+                            <h5>Executed</h5>
+                            <div class="kanban-card status-executed" draggable="true" onclick="openTaskModal('Complete Testing Phase', 'Executed', 'Testing phase for the project completed.')">
+                                <p><strong>Complete Testing Phase</strong></p>
+                                <p class="small-text">Status: Executed</p>
+                            </div>
+                        </div>
+                        <div class="kanban-column" id="milestones-cancelled">
+                            <h5>Cancelled</h5>
+                            <div class="kanban-card status-cancelled" draggable="true" onclick="openTaskModal('Cancel Feasibility Study', 'Cancelled', 'Feasibility study cancelled due to budget constraints.')">
+                                <p><strong>Cancel Feasibility Study</strong></p>
+                                <p class="small-text">Status: Cancelled</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-board">
+       
+                        <div class="kanban-column" id="milestones-executed">
+                            <h5>Executed</h5>
+                            <div class="kanban-card status-executed" draggable="true" onclick="openTaskModal('Complete Testing Phase', 'Executed', 'Testing phase for the project completed.')">
+                                <p><strong>Complete Testing Phase</strong></p>
+                                <p class="small-text">Status: Executed</p>
+                            </div>
+                        </div>
+                        <div class="kanban-column" id="milestones-cancelled">
+                            <h5>Cancelled</h5>
+                            <div class="kanban-card status-cancelled" draggable="true" onclick="openTaskModal('Cancel Feasibility Study', 'Cancelled', 'Feasibility study cancelled due to budget constraints.')">
+                                <p><strong>Cancel Feasibility Study</strong></p>
+                                <p class="small-text">Status: Cancelled</p>
+                            </div>
+                        </div>
+                    </div> -->
+                <!-- old code end -->
+            
+            
+                <!-- <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="taskModalLabel">Task Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Status:</strong> <span id="taskStatus"></span></p>
+                            <p><strong>Description:</strong></p>
+                            <p id="taskDescription"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="taskModalLabel">Task Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Status:</strong> <span id="taskStatus"></span></p>
+                    <p><strong>Risk Mitigation Plan:</strong></p>
+                    <p id="taskDescription"></p>
+                    <p><strong>Start Date:</strong> <span id="startDate"></span></p>
+                    <p><strong>End Date:</strong> <span id="endDate"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <!-- <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Cancel</button> -->
+                
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js Scripts -->
+    <script>
+        // Task Distribution Chart
+        const taskDistributionCtx = document.getElementById('taskDistributionChart').getContext('2d');
+        new Chart(taskDistributionCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Risks', 'Obligations', 'Milestones', 'Penalties'],
+                datasets: [{
+                    data: [15, 25, 10, 5],
+                    backgroundColor: ['#ff6384', '#36a2eb', '#4bc0c0', '#ffcd56']
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Task Distribution by Type' }
+                }
+            }
+        });
+
+        // Task Status Chart
+        const taskStatusCtx = document.getElementById('taskStatusChart').getContext('2d');
+        new Chart(taskStatusCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Init', 'Ongoing', 'Executed', 'Cancelled'],
+                datasets: [
+                    { label: 'Risks', data: [5, 7, 2, 1], backgroundColor: '#ff6384' },
+                    { label: 'Obligations', data: [8, 10, 5, 2], backgroundColor: '#36a2eb' },
+                    { label: 'Milestones', data: [3, 5, 2, 0], backgroundColor: '#4bc0c0' },
+                    { label: 'Penalties', data: [2, 1, 2, 0], backgroundColor: '#ffcd56' }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Task Status Breakdown' }
+                },
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                }
+            }
+        });
+
+        // Milestone Progress Chart
+        const milestoneProgressCtx = document.getElementById('milestoneProgressChart').getContext('2d');
+        new Chart(milestoneProgressCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Milestone Progress',
+                    data: [20, 40, 60, 80],
+                    borderColor: '#36a2eb',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Milestone Progress Over Time' }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Penalties Chart
+        const penaltiesCtx = document.getElementById('penaltiesChart').getContext('2d');
+        new Chart(penaltiesCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Paid', 'Unpaid'],
+                datasets: [{
+                    data: [8, 4],
+                    backgroundColor: ['#4bc0c0', '#ff6384']
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Penalties Breakdown' }
+                }
+            }
+        });
+    
+        const cards = document.querySelectorAll('.kanban-card');
+        const columns = document.querySelectorAll('.kanban-column');
+
+        cards.forEach(card => {
+            card.addEventListener('dragstart', () => {
+                card.classList.add('dragging');
+            });
+
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
+        });
+
+        columns.forEach(column => {
+            column.addEventListener('dragover', e => {
+                e.preventDefault();
+                const draggingCard = document.querySelector('.dragging');
+                column.appendChild(draggingCard);
+
+                // Update card appearance based on column
+                if (column.id.includes('init')) {
+                    draggingCard.className = 'kanban-card status-init';
+                } else if (column.id.includes('ongoing')) {
+                    draggingCard.className = 'kanban-card status-ongoing';
+                } else if (column.id.includes('executed')) {
+                    draggingCard.className = 'kanban-card status-executed';
+                } else if (column.id.includes('cancelled')) {
+                    draggingCard.className = 'kanban-card status-cancelled';
+                }
+            });
+        });
+
+        // Open Task Details Modal
+        function openTaskModal(title, status, description, start_date, end_date) {
+            document.getElementById('taskModalLabel').innerText = title;
+            document.getElementById('taskStatus').innerText = status;
+            document.getElementById('taskDescription').innerText = description;
+            document.getElementById('startDate').innerText = start_date;
+            document.getElementById('endDate').innerText = end_date;
+            new bootstrap.Modal(document.getElementById('taskModal')).show();
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+
+
+
+{% endblock %}

@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+     body {
+        background: #e60a0a;
+      }
+      
+      
+</style>
+
+<!-- Linking the necessary CSS and JS libraries -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container my-5">
+    <!-- Header Section -->
+    <div class="text-center mb-4">
+        <h1>Document Analysis and Contract Analytics Dashboard</h1>
+        <p class="lead">Explore document insights and contract analytics.</p>
+    </div>
+
+    <div class="columns">
+        <div class="column">
+            <!-- Summary Widgets -->
+            <div class="row mb-2">
+                <!-- First Row -->
+                <div class="col-md-6">
+                    <div class="card text-center shadow">
+                        <div class="card-body" style="height: 160px;">
+                            <h5 class="card-title">Total Documents</h5>
+                            <h3 id="total-documents" style="font-size: 2.75rem; margin-top: 23px;">{{document_count}}</h3>
+                            <!-- Total documents as calculated -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card text-center shadow">
+                        <div class="card-body" style="height: 160px;">
+                            <h5 class="card-title">Average Risk Level</h5>
+                            <h3 id="average-risk" style="font-size: 2.75rem; margin-top: 23px;">65%</h3>
+                            <!-- Average Risk Level -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-2">
+                <!-- Second Row -->
+                <div class="col-md-6">
+                    <div class="card text-center shadow">
+                        <div class="card-body" style="height: 160px;">
+                            <h5 class="card-title">Contract with Maximum Risk</h5>
+                            <h3 id="max-risk-contract" title="Master Services Agreement" style="margin-top: 16px; font-size: 2.25rem;">MSA</h3>
+                            <!-- Contract with Maximum Risk -->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card text-center shadow">
+                        <div class="card-body" style="height: 160px;">
+                            <h5 class="card-title">Obligation Type with Maximum Risk</h5>
+                            <h3 id="max-risk-obligation" style="margin-top: 16px; font-size: 2.25rem;">Damages</h3>
+                            <!-- Obligation Type with Maximum Risk -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+    <div class="column">
+    <!-- Obligation Risk Chart and Table -->
+    <div class="row">
+        <!-- Obligation Types by Risk Chart -->
+       
+            <div class="card shadow mb-4">
+                <div class="card-body" style="height: 328px;">
+                    <h5 class="card-title">Obligation Types by Risk</h5>
+                    <canvas id="obligationRiskChart" style="max-height: 200px; margin-top: 25px;"></canvas>
+                </div>
+            </div>
+      
+
+
+
+    </div>
+</div>
+</div>
+    <!-- Terms Analytics Section -->
+    <div class="mt-5">
+        <h2>Terms Analytics</h2>
+        <div class="columns">
+            <div class="column">
+            <!-- Contract Types Distribution -->
+            <div >
+                <div class="card shadow mb-4">
+                    <div class="card-body" style="height: 569px;">
+                        <h5 class="card-title">Contract Types Distribution</h5>
+                        <div style="margin-left: 60px; margin-top: 33px;">
+                        <canvas id="contractTypesChart"></canvas>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="column">
+            <!-- Contract Value Distribution -->
+            <div>
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Contract Value Distribution</h5>
+                        <div style="height: 208px; margin-left: 66px;">
+                        <canvas id="contractValueChart"></canvas>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start and End Dates -->
+            <div>
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Contract Start and End Dates</h5>
+                        <div style="height: 208px; margin-left: 66px;">
+                        <canvas id="dateRangeChart"></canvas>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    
+</div>
+
+        <!-- Obligation Types Table -->
+        <div>
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <!-- <h5 class="card-title">Contract Table</h5> -->
+                    <!-- Upload Button at Top-Right -->
+                    <div class="columns is-vcentered" style="margin-bottom: 1rem">
+                        <h3 class="card-title" style="    margin-left: 54px; margin-top: 35px;">Contract Table</h3>
+                        <div class="column is-flex is-justify-content-flex-end pt-6" style="margin-bottom: 5px; margin-right: 9px;">
+                            <button class="button is-primary js-modal-trigger" data-target="modal-ter">
+                                <span class="icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+                                <span>Upload Document</span>
+                            </button>
+                        </div>
+                    </div>
+        
+                    <!-- Table with No Horizontal Scrolling -->
+                    <div class="columns is-centered">
+                        <div class="column is-12">
+                            {% if document_err %}
+                            <div class="notification is-danger is-light">
+                                <button class="delete"></button>
+                                {{ document_err }}
+                            </div>
+                            {% endif %}
+        
+                            <div
+                                class="table-container"
+                                style="overflow-x: auto; white-space: nowrap; padding: 10px; max-height: 400px; overflow-y: auto;"
+                            >
+                                <table class="table is-striped is-hoverable is-narrow is-fullwidth">
+                                    <thead>
+                                        <tr>
+                                            <th><abbr title="ID">#</abbr></th>
+                                            <th>Document Name</th>
+                                            <th>File Path</th>
+                                            <th>Created By</th>
+                                            <th>Created On</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for p in document reversed %}
+                                        <tr>
+                                            <td>{{ p.id }}</td>
+                                            <td>
+                                                <form
+                                                    action="/display_extracted_result/{{ p.id }}/"
+                                                    enctype="multipart/form-data"
+                                                    method="POST"
+                                                >
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="button is-text">
+                                                        {{ p.name }}
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            <td>{{ p.file }}</td>
+                                            <td>{{ p.created_by }}</td>
+                                            <td>{{ p.created_on }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
+            </div>
+        </div>
+
+  
+  <!-- Add Document Modal -->
+  <div id="modal-ter" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Upload Document</p>
+        <button class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        <form
+          action="/document_form_submit_from_list_view/"
+          enctype="multipart/form-data"
+          method="POST"
+        >
+          {% csrf_token %} {% for hidden_field in form.hidden_fields %} {{
+          hidden_field }} {% endfor %}
+  
+          <div class="field">
+            <label class="label">Name</label>
+            <div class="control">{{ form.name }}</div>
+          </div>
+  
+          <div class="field">
+            <label class="label">File</label>
+            <div id="file-js-example" class="file has-name is-boxed is-fullwidth">
+              <label class="file-label">
+                {{ form.file }}
+                <span class="file-cta">
+                  <span class="file-icon">
+                    <i class="fas fa-upload"></i>
+                  </span>
+                  <span class="file-label">Choose a file…</span>
+                </span>
+                <span class="file-name">No file uploaded</span>
+              </label>
+            </div>
+          </div>
+  
+          <footer class="modal-card-foot">
+            <div class="control">
+              <button type="submit" class="button is-link">Upload</button>
+            </div>
+          </footer>
+        </form>
+      </section>
+    </div>
+  </div>
+<!-- JavaScript to Populate Charts -->
+<script>
+const fileInput = document.querySelector("#file-js-example input[type=file]");
+  fileInput.onchange = () => {
+    if (fileInput.files.length > 0) {
+      const fileName = document.querySelector("#file-js-example .file-name");
+      fileName.textContent = fileInput.files[0].name;
+    }
+  };
+
+    // Static Data for Summary Widgets
+    const totalDocuments = {{ document_count }};
+    const averageRiskLevel = "65%";
+    const maxRiskContract = "MSA";
+    const maxRiskObligation = "Damages";
+
+    // Update Total Documents and Average Risk Level
+    document.getElementById("total-documents").textContent = totalDocuments;
+    document.getElementById("average-risk").textContent = averageRiskLevel;
+    document.getElementById("max-risk-contract").textContent = maxRiskContract;
+    document.getElementById("max-risk-obligation").textContent = maxRiskObligation;
+
+    // Obligation Types by Risk Data
+    const obligationRiskData = {
+        Damages: 120,
+        Confidentiality: 90,
+        "Non-Compete": 70,
+        Insurance: 60,
+        Performance: 50,
+    };
+
+    // Color-coding for Obligation Risk Levels
+    const obligationRiskColors = Object.values(obligationRiskData).map((value) => {
+        if (value > 70) return "#e74a3b"; // Red for high risk
+        if (value >= 40) return "#f6c23e"; // Orange for medium risk
+        return "#1cc88a"; // Green for low risk
+    });
+
+    // Obligation Types by Risk Chart
+    const obligationRiskChartCtx = document
+        .getElementById("obligationRiskChart")
+        .getContext("2d");
+    new Chart(obligationRiskChartCtx, {
+        type: "bar",
+        data: {
+            labels: Object.keys(obligationRiskData),
+            datasets: [
+                {
+                    label: "Total Risk (%)",
+                    data: Object.values(obligationRiskData),
+                    backgroundColor: obligationRiskColors,
+                },
+            ],
+        },
+        options: {
+            indexAxis: "y",
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Risk Percentage",
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Obligation Types",
+                    },
+                },
+            },
+            plugins: {
+                legend: { display: false },
+            },
+        },
+    });
+
+    // Contract Types Distribution Data
+    const contractTypesData = {
+        "Service Agreement": 4,
+        "Supply Agreement": 5,
+        "Licensing Agreement": 3,
+        "Consulting Agreement": 4,
+        "Partnership Agreement": 4,
+    };
+    const contractTypesChartCtx = document
+        .getElementById("contractTypesChart")
+        .getContext("2d");
+    new Chart(contractTypesChartCtx, {
+        type: "pie",
+        data: {
+            labels: Object.keys(contractTypesData),
+            datasets: [
+                {
+                    data: Object.values(contractTypesData),
+                    backgroundColor: [
+                        "#4e73df",
+                        "#1cc88a",
+                        "#36b9cc",
+                        "#f6c23e",
+                        "#e74a3b",
+                    ],
+                },
+            ],
+        },
+    });
+
+    // Contract Value Distribution Data
+    const contractValueChartCtx = document
+        .getElementById("contractValueChart")
+        .getContext("2d");
+    new Chart(contractValueChartCtx, {
+        type: "bar",
+        data: {
+            labels: ["$50k", "$100k", "$250k", "$500k", "$1M"],
+            datasets: [
+                {
+                    label: "Number of Contracts",
+                    data: [3, 6, 4, 5, 2],
+                    backgroundColor: "#36b9cc",
+                },
+            ],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Count of Contracts",
+                    },
+                },
+            },
+        },
+    });
+
+    // Contract Start and End Dates Data
+    const dateLabels = [
+        "Jan 2023",
+        "Mar 2023",
+        "Jun 2023",
+        "Sep 2023",
+        "Dec 2023",
+        "Feb 2024",
+        "May 2024",
+        "Aug 2024",
+        "Nov 2024",
+    ];
+    const dateRangeChartCtx = document
+        .getElementById("dateRangeChart")
+        .getContext("2d");
+    new Chart(dateRangeChartCtx, {
+        type: "line",
+        data: {
+            labels: dateLabels,
+            datasets: [
+                {
+                    label: "Contracts Starting",
+                    data: [2, 5, 7, 3, 4, 6, 2, 5, 3],
+                    fill: false,
+                    borderColor: "#1cc88a",
+                    tension: 0.1,
+                },
+                {
+                    label: "Contracts Ending",
+                    data: [1, 4, 6, 2, 3, 5, 1, 4, 2],
+                    fill: false,
+                    borderColor: "#f6c23e",
+                    tension: 0.1,
+                },
+            ],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Count of Contracts",
+                    },
+                },
+            },
+        },
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base_logout.html' %}
+
+{% block content %}
+    
+
+   
+
+    <div style="width:30%;" class="columns is-centered">
+    <form class="box" style="width: 100%;" method="post" action="{% url 'login' %}"><!-- margin-top: 24%; margin-left: 30%;-->
+      {% if form.errors %}
+      <div class="notification is-danger  is-light">
+        <button class="delete"></button>
+        
+        Your username and password didn't match. Please try again.
+   
+      </div>
+      {% endif %}
+      <div class="column"><img src="/media/aavenir.png"
+        alt="Bulma: Free, open source, and modern CSS framework based on Flexbox" width="250" height="100">
+        
+      </div>
+        {% csrf_token %}
+        <div class="field">
+          <label class="label">Username</label>
+          <div class="control">
+            {{ form.username }}
+          </div>
+        </div>
+      
+        <div class="field">
+          <label class="label">Password</label>
+          <div class="control">
+            {{ form.password }}
+          </div>
+        </div>
+        <input class="login_button" type="submit" value="Sign In" />
+        <input type="hidden" name="next" value="{{ next }}" />
+        
+        
+
+        
+      </form>
+      
+    </div>
+
+
+    
+{% endblock %}
+
+
+
+

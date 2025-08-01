@@ -1,0 +1,655 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+
+
+.contract-section {
+border-left: 4px solid #0d6efd;
+margin-bottom: 20px;
+}
+.clause-card {
+transition: all 0.2s ease;
+border-left: 4px solid transparent;
+padding: 1.5rem;
+}
+.clause-card:hover {
+transform: translateX(5px);
+background-color: #f5f5f5;
+}
+.clause-critical {
+border-left-color: #f14668;
+}
+.clause-important {
+border-left-color: #ffdd57;
+}
+.clause-standard {
+border-left-color: #48c774;
+}
+.metadata-pill {
+background-color: #e9ecef;
+padding: 0.5rem 1rem;
+border-radius: 20px;
+margin: 0.5rem 0;
+display: inline-block;
+}
+.side-nav {
+position: sticky;
+top: 20px;
+}
+.clause-highlight {
+background-color: #fff3cd;
+padding: 0.2rem 0.5rem;
+border-radius: 3px;
+}
+.timeline-item {
+padding-left: 1rem;
+border-left: 2px solid #dee2e6;
+margin-bottom: 15px;
+}
+.timeline-item:hover {
+border-left-color: #0d6efd;
+}
+.risk-indicator {
+width: 10px;
+height: 10px;
+border-radius: 50%;
+display: inline-block;
+margin-right: 5px;
+}
+.risk-high { background-color: #f14668; }
+.risk-medium { background-color: #ffdd57; }
+.risk-low { background-color: #48c774; }
+.risk-level {
+display: flex;
+align-items: center;
+}
+td.yash {
+width: 9%; 
+padding: 10px; /* Adjust padding if necessary */
+}
+.dot {
+width: 12px;
+height: 12px;
+border-radius: 50%;
+display: inline-block;
+margin-right: 8px;
+}
+
+.risk-high {
+background-color: red;
+}
+
+.percentage {
+margin-right: 8px;
+}
+
+.tooltip-icon {
+cursor: pointer;
+}
+/* Sidebar Styling */
+#sidebar {
+position: relative;
+width: 250px;
+transition: transform 0.3s ease;
+
+}
+
+#sidebar.collapsed {
+transform: translateX(-250px);
+}
+
+.toggle-btn {
+position: absolute;
+top: 10px;
+right: -25px;
+background: #333;
+color: #fff;
+border: none;
+font-size: 18px;
+padding: 5px 10px;
+cursor: pointer;
+z-index: 2;
+}
+
+/* Adjust main content when sidebar is collapsed */
+#mainContent {
+transition: margin-left 0.3s ease;
+}
+
+#mainContent.expanded {
+margin-left: 0;
+}
+
+#mainContent.collapsed {
+margin-left: 250px;
+}
+.side-nav {
+    /* background-color: #f5f5f5; */
+    padding: 1em;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+/* Right Sidebar (PDF View) */
+#pdfSidebar {
+    width: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background-color: #f5f5f5;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding: 1em;
+    z-index: -1000;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+}
+
+/* PDF Sidebar open width */
+#pdfSidebar.open {
+    width: 38%;
+    z-index: 1000;
+}
+
+/* Close Button inside PDF Sidebar */
+.pdf-close-btn {
+    font-size: 1.5em;
+    cursor: pointer;
+    position: absolute;
+    top: 0.5em;
+    right: 1em;
+    color: #444;
+}
+.is-hidden {
+    display: none;
+}
+.mt-5 {
+    margin-top: 1rem !important; 
+}
+.section{
+    padding: 10px;
+}
+
+a { text-decoration: none; color: white; }
+
+.table-content-small {
+        font-size: 0.85rem; /* Adjust the value as needed, e.g., 0.85rem, 12px, etc. */
+    }
+
+.modal-content {
+    width: auto !important;
+}
+
+</style>
+
+
+<div class="container py-4">
+<div class="columns">
+    <!-- Sidebar Navigation with Toggle Button -->
+    <div id="sidebar" class="column is-one-quarter side-nav" style="height: 100%; position: sticky; padding: 0px; margin-left: -50px;">
+        <!-- <button class="toggle-btn" onclick="toggleSidebar()">&#x25C0;</button> -->
+        <aside class="menu">
+            <div class="box mt-5" style=" border: 1px solid #ddd;"><div class="card-body">
+            <h5 >Contract Overview</h5>
+            <ul class="nav flex-column nav-pills" >
+                
+                <li><a class="nav-link" href="#risks">Risks</a></li>
+                <li><a class="nav-link active" href="#key-terms">Terms</a></li>
+                <li><a class="nav-link" href="#clauses">Clauses</a></li>
+                <li><a class="nav-link" href="#obligations">Obligations</a></li>
+                
+                
+            </ul>
+            </div>
+            </div>
+            
+            <div class="box mt-5" style="display: block;  border: 1px solid #ddd;">
+                <p class="title is-5">Quick Stats</p>
+                <div class="field">
+                    <label class="label">Risk Level - <span style="font-weight: 450;">{{ avg_risk_percentage.0|floatformat:2 }}%</span></label>
+                    <progress 
+                        class="progress 
+                            {% if avg_risk_percentag.0 < 20 %}is-success
+                            {% elif avg_risk_percentage.0 <= 50 %}is-warning
+                            {% else %}is-danger
+                            {% endif %}" 
+                        value="{{ avg_risk_percentage.0 }}" 
+                        max="100">
+                    </progress>
+                </div>
+                
+                <!-- <div class="field">
+                    <label class="label">Completion</label>
+                    <progress class="progress is-success" value="45" max="100">45%</progress>
+                </div> -->
+                <div class="content">
+                    
+                    <p><strong>Total Terms:</strong> {{ term_length.0 }}</p>
+                    <p><strong>Total Obligations:</strong> {{ obligation_length.0 }}</p>
+                    <p><strong>Total Clauses:</strong> {{ clause_length.0 }}</p>
+                </div>
+            </div>
+            <!-- <button class="button is-link mt-3" onclick="togglePDFSidebar()">Live PDF View</button> -->
+        </aside>
+    </div>
+
+
+<!-- Main Content -->
+<div class="column">
+    <!-- Contract Header -->
+    <div class="box mt-1" style="margin-right: -60px;">
+        <div class="columns is-vcentered is-gapless">
+            <!-- Left Column for Document Name and Contract Type -->
+            <div class="column is-full">
+                <!-- Display Document Name and Contract Type -->
+                {% if selected_document.name %}
+                    <h2 class="title is-5 has-text-truncated">📋{{ selected_document.name }}</h2>
+                {% else %}
+                    <h2 class="title is-5 has-text-truncated">📋 Untitled Document</h2>
+                {% endif %}
+    
+                {% if contract_type %}
+                    <p class="subtitle is-6">📃Contract Type: {{ contract_type }}</p>
+                {% else %}
+                    <p class="subtitle is-6">📃Contract Type: Not Specified</p>
+                {% endif %}
+            </div>
+    
+            <!-- Right Column for Buttons -->
+            <div class="column is-narrow has-text-right">
+                <div class="buttons is-right">
+                    <button class="button is-outlined is-primary mr-2 " onclick="togglePDFSidebar()">
+                        <span class="icon"><i class="fas fa-eye"></i></span>
+                        <span>Live View</span>
+                    </button>
+                    <button class="button is-primary " id="download-btn">
+                        <a href="{{ pdf_url }}" download>
+                        <span class="icon"><i class="fas fa-download"></i></span>
+                        <span>Download</span></a>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Summary -->
+    
+
+       <!-- risk -->
+    <div id="risks" class="section" style="margin-right: -70px;">
+    <div  class="contract-section card mb-4">
+        <div class="card-body">
+            <h4>Identified Risks</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-danger text-white mb-3">
+                        <div class="card-body">
+                            <h6>High Risk Items</h6>
+                            {% if high_risk_count.0 %}
+                            <h2>{{ high_risk_count.0 }}</h2>
+                            {% elif high_risk_count.0 == 0 %}
+                            <h2>{{ high_risk_count.0 }}</h2>
+                            {% else %}
+                            <h2>{{ high_risk_count }}</h2>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-dark mb-3">
+                        <div class="card-body">
+                            <h6>Medium Risk Items</h6>
+                            {% if medium_risk_count.0 %}
+                            <h2>{{ medium_risk_count.0 }}</h2>
+                            {% elif medium_risk_count.0 == 0%}
+                            <h2>{{ medium_risk_count.0 }}</h2>
+                            {% else %}
+                            <h2>{{ medium_risk_count }}</h2>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white mb-3">
+                        <div class="card-body">
+                            <h6>Low Risk Items</h6>
+                            {% if low_risk_count.0 %}
+                            <h2>{{ low_risk_count.0 }}</h2>
+                            {% elif low_risk_count.0 == 0%}
+                            <h2>{{ low_risk_count.0 }}</h2>
+                            {% else %}
+                            <h2>{{ low_risk_count }}</h2>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="mt-3">
+                <div class="clause-card p-3 mb-3 clause-critical">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <span class="badge bg-danger mb-2">High Risk</span>
+                            <h6>Data Security Breach</h6>
+                            <p class="mb-0 small">Potential penalties up to $100,000 per incident</p>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger">
+                            View Mitigation
+                        </button>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+    </div>
+    <!-- Key Terms -->
+    <div id="key-terms" class="section">
+    <div id="key-terms" class="contract-section box" style="margin-right: -70px;">
+        <div style="width: 100%;">
+        <!-- <h4 class="title is-4">Key Terms</h4> -->
+        {% if not terms %}
+        <div class="notification is-warning">No Terms Data Available</div>
+        {% endif %}
+
+        <!-- Terms Section -->
+        {% if terms %}
+        <div style="display:flex;">
+            <div style="
+            width: 169px;
+        ">
+            <h3 class="title is-4">📝 Terms</h3>
+        </div>
+            <div class="content" style="width: 100%;
+margin-left: -169px;">
+                <table class="table is-fullwidth is-striped table-content-small" style="    margin-top: 53px;">
+                    <thead>
+                        <tr>
+                            <th>Term</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for term in terms %}
+                            {% for key, value in term.items %}
+                                {% if key != 'paragraph' %}
+                                    <tr>
+                                        <td class="truncate" title="{{ key }}">{{ key | slice:":90" }}{% if key|length > 90 %}...{% endif %}</td>
+                                        <td class="truncate has-background-link-light" title="{{ value }}">{{ value | slice:":90" }}{% if value|length > 90 %}...{% endif %}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+    <!-- clauses -->
+    <div id="clauses" class="section">
+        <div  class="contract-section box" style="margin-right: -70px;">
+        <div style="width: 100%;">
+            <div style="width: 169px;">
+                <h4 class="title is-4">📝 Clauses</h4>
+            </div>
+            {% if clauses %}
+                <table class="table is-fullwidth is-striped table-content-small" style="margin-top: 53px; margin-left: 0px;">
+                    <thead>
+                        <tr>
+                            <th>Clause</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for clause in clauses %}
+                            {% for key, value in clause.items %}
+                                {% if key != 'paragraph' and key != 'reason' and key != 'risk_percentage' %}
+                                    <tr class="clause-row {% if forloop.parentloop.counter > 5 %}is-hidden{% endif %}">
+                                        <td class="truncate" title="{{ key }}">
+                                            {{ key | slice:":90" }}{% if key|length > 90 %}...{% endif %}
+                                        </td>
+                                        <td class="truncate has-background-link-light" title="{{ value }}">
+                                            {{ value | slice:":90" }}{% if value|length > 90 %}...{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="notification is-warning">No Clauses Data Available</div>
+            {% endif %}
+
+            {% if clause_length.0 > 5%}
+            <!-- Show More / Show Less Button -->
+            <div class="has-text-right mt-3" style="padding-top: 10px;">
+                <button id="toggle-clauses-btn" class="button is-small is-link" onclick="toggleClauses()">Show More</button>
+            </div>
+            {% endif %}
+        </div>
+        </div>
+    </div>
+
+    <!-- Obligations Table -->
+    {% if obligations %}
+    <div id="obligations" class="section">
+    <div  class="contract-section box" style="margin-right: -70px;">
+    <div><div>
+    <div style="width: 169px;">
+    <h4 class="title is-4">📝 Obligations</h4>
+    </div>
+    <table class="table is-fullwidth table-content-small" style="    margin-top: 53px;
+    margin-left: 0px;">
+    <thead>
+    <tr>
+        <th>Category</th>
+        <th>Obligation</th>
+        <th>Description</th>
+        <th>Risk Percentage</th>
+        <th>Risk Value</th>
+        <th>Penalty</th>
+        <th>Responsible Party</th>
+        <th>Due Date</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for obligation in obligations %}
+    <tr class="obligation-row {% if forloop.counter > 5 %}is-hidden{% endif %}">
+        <td class="truncate" title="{{ obligation.obligation_category }}">
+            {{ obligation.obligation_category | slice:":40" }}{% if obligation.obligation_category|length > 40 %}...{% endif %}
+        </td>
+        <td class="truncate" title="{{ obligation.last_key }}">
+            {{ obligation.last_key | slice:":40" }}{% if obligation.last_key|length > 40 %}...{% endif %}
+        </td>
+        <td class="truncate" title="{{ obligation.last_value }}">
+            {{ obligation.last_value | slice:"40" }}{% if obligation.last_value|length > 40 %}...{% endif %}
+        </td>
+        <td class="yash">
+            <span style="display:ruby;">
+            {% if obligation.risk_percentage == 'NA' %}
+                <span class="dot risk-low"></span> 0%
+            {% elif obligation.risk_percentage > 70 %}
+                <span class="dot risk-high"></span> {{ obligation.risk_percentage }}%
+            {% elif obligation.risk_percentage > 30 %}
+                <span class="dot risk-medium"></span> {{ obligation.risk_percentage }}%
+            {% else %}
+                <span class="dot risk-low"></span> {{ obligation.risk_percentage }}%
+            {% endif %}
+            {% if obligation.reason %}
+                <span class="tooltip-icon" onclick="showModal('{{ obligation.reason }}', event)"><strong>i</strong></span>
+            {% endif %}
+        </span>
+        </td>
+        <td class="truncate" title="{{ obligation.risk_value }}">{{ obligation.risk_value | slice:":50" }}{% if obligation.risk_value|length > 50 %}...{% endif %}</td>
+        <td class="truncate" title="{{ obligation.penalty }}">{{ obligation.penalty | slice:":50" }}{% if obligation.penalty|length > 50 %}...{% endif %}</td>
+        <td class="truncate" title="{{ obligation.responsible_party }}">{{ obligation.responsible_party | slice:":50" }}{% if obligation.responsible_party|length > 50 %}...{% endif %}</td>
+        <td class="truncate" title="{{ obligation.due_date }}">{{ obligation.due_date | slice:":50" }}{% if obligation.due_date|length > 50 %}...{% endif %}</td>
+        <td><button class="button is-small is-link" onclick="navigateToTask('{{ obligation.id }}','{{ document_id }}')"><span class="icon"><i class="fas fa-bell"></i></span></button></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    </div>
+    {% if obligation_length.0 > 5%}
+    <div class="has-text-right mt-3" style="padding-top: 10px;">
+    <button id="expand-btn" class="button is-small is-link" onclick="toggleObligations()">Show More</button>
+    </div>
+    {% endif %}
+    </div>
+</div>
+    <!-- Show More Button -->
+    </div>
+    {% else %}
+    <div class="notification is-warning">No Obligations Data Available</div>
+    {% endif %}
+
+
+
+
+
+ 
+    
+
+
+    <!-- Additional Sections (Risks, Timeline) would follow a similar Bulma structure -->
+
+</div>
+</div>
+</div>
+
+<div id="pdfSidebar">
+<span class="pdf-close-btn" onclick="togglePDFSidebar()">&times;</span>
+<h2 class="title is-4">PDF View</h2>
+{% if pdf_url %}
+<iframe 
+src="{{ pdf_url }}#zoom=50" 
+width="100%" 
+height="100%"
+style="padding: -30px; height: 100%;  position: sticky;
+top: 0;  
+overflow: hidden;">
+<p>Your browser does not support PDFs. <a href="{{ pdf_url }}" download>Download PDF</a>.</p>
+</iframe>
+{% else %}
+<p>No PDF available. Please upload a DOCX to convert.</p>
+{% endif %}
+</div>
+
+<!-- Modal Structure -->
+<div class="modal" id="riskModal">
+    <div class="modal-background" onclick="closeModal()"></div>
+    <div class="modal-content">
+        <div class="box">
+            <div class="content">
+                <p class="title is-5">Risk Reason</p>
+                <p id="riskReasonText"></p> 
+            </div>
+        </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close" onclick="closeModal()"></button>
+</div>
+
+<script>
+function toggleSidebar() {
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+
+sidebar.classList.toggle('collapsed');
+mainContent.classList.toggle('expanded');
+}
+function togglePDFSidebar() {
+const pdfSidebar = document.getElementById('pdfSidebar');
+pdfSidebar.classList.toggle('open');
+}
+function toggleObligations() {
+const rows = document.querySelectorAll('.obligation-row');
+const expandBtn = document.getElementById('expand-btn');
+
+rows.forEach((row, index) => {
+if (index >= 5) {
+    row.classList.toggle('is-hidden');
+}
+});
+
+if (expandBtn.innerText === 'Show More') {
+expandBtn.innerText = 'Show Less';
+} else {
+expandBtn.innerText = 'Show More';
+}
+}
+function toggleClauses() {
+const rows = document.querySelectorAll('.clause-row');
+const hiddenRows = document.querySelectorAll('.clause-row.is-hidden');
+const button = document.getElementById('toggle-clauses-btn');
+
+if (hiddenRows.length > 0) {
+// Show all rows
+rows.forEach(row => row.classList.remove('is-hidden'));
+button.innerText = 'Show Less';
+} else {
+// Hide rows beyond the first five
+rows.forEach((row, index) => {
+    if (index >= 5) {
+        row.classList.add('is-hidden');
+    }
+});
+button.innerText = 'Show More';
+}
+}
+function showModal(reason, event) {
+    const modal = document.getElementById('riskModal');
+    const riskReasonText = document.getElementById('riskReasonText');
+    
+    riskReasonText.textContent = reason; // Set the risk reason text
+    modal.classList.add('is-active'); // Show the modal
+}
+
+function closeModal() {
+    const modal = document.getElementById('riskModal');
+    modal.classList.remove('is-active'); // Hide the modal
+}
+function navigateToTask(obligationId, documentId) {      
+        // Update the URL based on the obligation ID or any required parameter    
+    const url = `/obligation_task/${documentId}/${obligationId}/`;      
+    window.location.href = url; 
+}
+document.addEventListener("DOMContentLoaded", function () {
+    const sections = document.querySelectorAll(".section");
+    const navLinks = document.querySelectorAll(".nav-link");
+
+    window.addEventListener("scroll", () => {
+        let currentSectionId = "";
+
+        // Loop through sections to find the one currently in view
+        sections.forEach((section) => {
+            const sectionTop = section.getBoundingClientRect().top;
+
+            // Detect if section top is within viewport
+            if (sectionTop <= window.innerHeight / 2 && sectionTop >= 0) {
+                currentSectionId = section.getAttribute("id");
+            }
+        });
+
+        // Update active class based on current section in view
+        navLinks.forEach((link) => {
+            link.classList.remove("active");
+            if (link.getAttribute("href") === `#${currentSectionId}`) {
+                link.classList.add("active");
+            }
+        });
+    });
+});
+
+</script>
+
+{% endblock content %}

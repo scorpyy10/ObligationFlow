@@ -1,0 +1,325 @@
+<!-- dwitter/templates/base.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Include the Bulma CSS framework for styling -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="canonical"
+      href="https://wikiki.github.io/components/pricingtable/"
+    />
+    <link
+      rel="stylesheet"
+      href="https://wikiki.github.io/css/documentation.css?v=201911011043"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Bulma-Extensions"
+      href="https://wikiki.github.io/feed.xml"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.4/dist/css/bulma-carousel.min.css"
+    />
+
+    <title>ObligationFlow</title>
+    {% load django_simple_bulma %} {% bulma %} {% font_awesome %}
+    <style>
+      body {
+        background: #e6e6e6;
+      }
+
+      .is-one-third {
+        padding: 4rem 5rem;
+      }
+
+      .spacer {
+        height: 40px;
+      }
+
+      .plan_title {
+        margin-bottom: 0 !important;
+      }
+
+      .plan_subtitle {
+        color: #90a4ae;
+      }
+
+      .price {
+        margin-top: 40px;
+      }
+
+      .price h2 {
+        color: #00c4a7;
+      }
+
+      .price span {
+        font-size: 20px;
+      }
+
+      .unavailable {
+        text-decoration: line-through;
+        color: #90a4ae;
+      }
+
+      .best_selling {
+        background: #003049;
+      }
+
+      .best_selling h2 {
+        color: #f77f00;
+      }
+
+      .best_selling_btn {
+        background: #f77f00 !important;
+      }
+
+      .navbar-item.is-mega {
+        position: static;
+      }
+
+      .navbar-item img {
+        max-height: 1.75rem;
+        width: 171px;
+        /* height: 43px; */
+        object-fit: cover;
+      }
+
+      .is-mega-menu-title {
+        margin-bottom: 0;
+        padding: 0.375rem 1rem;
+      }
+
+      .asLink {
+        background: none !important;
+        border: none;
+        /*optional*/
+        /*input has OS specific font-family*/
+        color: #069;
+        padding: 0;
+
+        cursor: pointer;
+        font-size: 1em;
+      }
+
+      .button.is-primary {
+        background-color: #00d1b2;
+        border-color: transparent;
+        color: #fff;
+      }
+
+      #id_username,
+      #id_password {
+        box-shadow: inset 0 0.0625em 0.125em rgb(10 10 10 / 5%);
+        max-width: 100%;
+        width: 100%;
+        background-color: white;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        border-color: #dbdbdb;
+
+        color: #363636;
+        -webkit-appearance: none;
+        align-items: center;
+
+        display: inline-flex;
+        font-size: 1rem;
+        height: 2.5em;
+        justify-content: flex-start;
+        line-height: 1.5;
+        padding-bottom: calc(0.5em - 1px);
+        padding-left: calc(0.75em - 1px);
+        padding-right: calc(0.75em - 1px);
+        padding-top: calc(0.5em - 1px);
+        position: relative;
+        vertical-align: top;
+        line-height: 1.5;
+      }
+
+      .select.is-multiple,
+      .full_width {
+        width: 100% !important;
+      }
+      select[multiple] {
+        width: 100% !important;
+      }
+
+      .loader {
+        width: 15px;
+        height: 15px;
+        border: 2px solid #fff;
+        border-bottom-color: #00d1b2;
+        /* border-radius: 100%; */
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .box {
+        display: flex;
+        overflow-x: auto;
+      }
+      .li_table {
+        border-collapse: collapse;
+        border: 2px solid gray;
+        margin-left: 5px;
+        font-size: 12px;
+      }
+      .dummy {
+        width: 0% !important;
+      }
+      .tags {
+        margin-top: 0.5rem;
+      }
+
+      .tags:not(:last-child) {
+        margin-bottom: 0rem !important;
+      }
+
+      .tags:not(:first-child) {
+        margin-bottom: 0rem !important;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <nav
+      class="navbar is-light"
+      role="navigation"
+      aria-label="dropdown navigation"
+      style="background-color: #f5f5f5"
+    >
+      <div class="navbar-start">
+        <a class="navbar-item" href="/" style="padding-top: 2px;">
+          {% load static %}
+          <img
+            src="{% static 'ObligationFlowApp/images/ObligationFlow.png' %}"
+            width="112"
+            height="58"
+          />
+        </a>
+        <a class="navbar-item" href="/" style=" text-decoration: none;" > Dashboard </a>
+        <a class="navbar-item" href="/documents_list/" style=" text-decoration: none;"> Contract Table </a>
+        <a class="navbar-item" href="/task_dashboard/" style=" text-decoration: none;"> Task Dashboard </a>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          {% if user.is_authenticated %}
+          <a>
+            <p class="top-menu">
+              Hello {{ user.username }} <small><a href="#">  </a></small>
+            </p>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </nav>
+
+    <div id="bg-spinner">
+      <div id="position-spinner">
+        <span id="spinner"></span>
+      </div>
+    </div>
+
+    <div class="container" style="min-height: 95.9vh">
+      {% block content %} {% endblock content %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bulma-carousel@4.0.4/dist/js/bulma-carousel.min.js"></script>
+
+    <!-- Script to open or close modal -->
+    <script type="text/javascript">
+      document.addEventListener("DOMContentLoaded", () => {
+        let cardToggles = document.getElementsByClassName("card-toggle");
+        for (let i = 0; i < cardToggles.length; i++) {
+          cardToggles[i].addEventListener("click", (e) => {
+            e.currentTarget.parentElement.parentElement.childNodes[3].classList.toggle(
+              "is-hidden"
+            );
+          });
+        }
+
+        (document.querySelectorAll(".notification .delete") || []).forEach(
+          ($delete) => {
+            const $notification = $delete.parentNode;
+
+            $delete.addEventListener("click", () => {
+              $notification.parentNode.removeChild($notification);
+            });
+          }
+        );
+
+        // Functions to open and close a modal
+        function openModal($el) {
+          $el.classList.add("is-active");
+        }
+
+        function closeModal($el) {
+          $el.classList.remove("is-active");
+        }
+
+        function closeAllModals() {
+          (document.querySelectorAll(".modal") || []).forEach(($modal) => {
+            closeModal($modal);
+          });
+        }
+
+        // Add a click event on buttons to open a specific modal
+        (document.querySelectorAll(".js-modal-trigger") || []).forEach(
+          ($trigger) => {
+            const modal = $trigger.dataset.target;
+            const $target = document.getElementById(modal);
+
+            $trigger.addEventListener("click", () => {
+              openModal($target);
+            });
+          }
+        );
+
+        // Add a click event on various child elements to close the parent modal
+        (
+          document.querySelectorAll(
+            ".modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button"
+          ) || []
+        ).forEach(($close) => {
+          const $target = $close.closest(".modal");
+
+          $close.addEventListener("click", () => {
+            closeModal($target);
+          });
+        });
+
+        // Add a keyboard event to close all modals
+        document.addEventListener("keydown", (event) => {
+          const e = event || window.event;
+
+          if (e.keyCode === 27) {
+            // Escape key
+            closeAllModals();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

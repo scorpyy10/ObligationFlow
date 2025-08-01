@@ -1,0 +1,125 @@
+{% extends 'base.html' %} {% block content %}
+
+<!-- Upload Button at Top-Right -->
+<div class="columns is-vcentered" style="margin-bottom: 1rem">
+  <div class="column is-flex is-justify-content-flex-end pt-6">
+    <button class="button is-primary js-modal-trigger" data-target="modal-ter">
+      <span class="icon">
+        <i class="fas fa-upload"></i>
+      </span>
+      <span>Upload Document</span>
+    </button>
+  </div>
+</div>
+
+<!-- Table with No Horizontal Scrolling -->
+<div class="columns is-centered">
+  <div class="column is-12">
+    {% if document_err %}
+    <div class="notification is-danger is-light">
+      <button class="delete"></button>
+      {{ document_err }}
+    </div>
+    {% endif %}
+
+    <div
+      class="table-container"
+      style="overflow-x: auto; white-space: nowrap; padding: 10px"
+    >
+      <table class="table is-striped is-hoverable is-narrow is-fullwidth">
+        <thead>
+          <tr>
+            <th><abbr title="ID">#</abbr></th>
+            <th>Document Name</th>
+            <th>File Path</th>
+            <th>Created By</th>
+            <th>Created On</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in document reversed %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>
+              <form
+                action="/display_extracted_result/{{ p.id }}/"
+                enctype="multipart/form-data"
+                method="POST"
+              >
+                {% csrf_token %}
+                <button type="submit" class="button is-text">
+                  {{ p.name }}
+                </button>
+              </form>
+            </td>
+            <td>{{ p.file }}</td>
+            <td>{{ p.created_by }}</td>
+            <td>{{ p.created_on }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add Document Modal -->
+<div id="modal-ter" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Upload Document</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <form
+        action="/document_form_submit_from_list_view/"
+        enctype="multipart/form-data"
+        method="POST"
+      >
+        {% csrf_token %} {% for hidden_field in form.hidden_fields %} {{
+        hidden_field }} {% endfor %}
+
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control">{{ form.name }}</div>
+        </div>
+
+        <div class="field">
+          <label class="label">File</label>
+          <div id="file-js-example" class="file has-name is-boxed is-fullwidth">
+            <label class="file-label">
+              {{ form.file }}
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">Choose a file…</span>
+              </span>
+              <span class="file-name">No file uploaded</span>
+            </label>
+          </div>
+        </div>
+
+        <footer class="modal-card-foot">
+          <div class="control">
+            <button type="submit" class="button is-link">Upload</button>
+          </div>
+        </footer>
+      </form>
+    </section>
+  </div>
+</div>
+
+<!-- Script to add input file -->
+<script>
+  const fileInput = document.querySelector("#file-js-example input[type=file]");
+  fileInput.onchange = () => {
+    if (fileInput.files.length > 0) {
+      const fileName = document.querySelector("#file-js-example .file-name");
+      fileName.textContent = fileInput.files[0].name;
+    }
+  };
+</script>
+
+{% endblock content %}

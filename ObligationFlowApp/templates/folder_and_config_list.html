@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+
+<div class="columns ">
+  <div class="column is-right mt-4 my-0">
+    <button class="button is-primary js-modal-trigger modal-button " style="float: right;" data-target="modal-form">Add
+      Folder</button>
+  </div>
+  <div class="is-divider-vertical"></div>
+  <div class="column is-right mt-4 my-0">
+    <button class="button is-primary js-modal-trigger modal-button " style="float: right;"
+      data-target="modal-config">Add
+      Config</button>
+  </div>
+</div>
+
+
+
+<div id="modal-form" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Add Folder</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <!-- FORM START ... -->
+
+      <form action="/folderFormSubmit/" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        {% for hidden_field in folder_form.hidden_fields %}
+        {{ hidden_field }}
+        {% endfor %}
+
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control">
+            {{ folder_form.name }}
+          </div>
+        </div>
+
+        <!--<div class="field is-grouped">
+              <div class="control">
+                
+
+              </div>
+              <footer class="modal-card-foot" style="margin-left: -20px;margin-right: -20px;margin-bottom: -20px;">
+
+                <button type="submit" class="button is-success">Save changes</button>
+                <button class="button">Cancel</button>
+              </footer>
+              
+              
+            </div> -->
+        <footer class="modal-card-foot" style="margin-left: -20px;margin-right: -20px;margin-bottom: -20px;">
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" class="button is-link">Submit</button>
+            </div>
+            <div class="control">
+              <!--<button class="button is-link is-light">Cancel</button>-->
+            </div>
+          </div>
+        </footer>
+
+      </form>
+      <!-- FORM END ... -->
+    </section>
+    <!---->
+  </div>
+</div>
+
+
+<div id="modal-config" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Add Config</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <!-- FORM START ... -->
+
+      <form action="/configFormSubmit/" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        {% for hidden_field in config_form.hidden_fields %}
+        {{ hidden_field }}
+        {% endfor %}
+
+        <div class="field">
+          <label class="label">Name</label>
+          <div class="control">
+            {{ config_form.name }}
+          </div>
+        </div>
+
+        <!--<div class="field is-grouped">
+              <div class="control">
+                
+
+              </div>
+              <footer class="modal-card-foot" style="margin-left: -20px;margin-right: -20px;margin-bottom: -20px;">
+
+                <button type="submit" class="button is-success">Save changes</button>
+                <button class="button">Cancel</button>
+              </footer>
+              
+              
+            </div> -->
+        <footer class="modal-card-foot" style="margin-left: -20px;margin-right: -20px;margin-bottom: -20px;">
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" class="button is-link">Submit</button>
+            </div>
+            <div class="control">
+              <!--<button class="button is-link is-light">Cancel</button>-->
+            </div>
+          </div>
+        </footer>
+      </form>
+      <!-- FORM END ... -->
+    </section>
+    <!---->
+  </div>
+</div>
+
+
+
+<div class="columns">
+  <div class="column ">
+    {% if folder_err %}
+<div class="notification is-danger  is-light">
+  <button class="delete"></button>
+
+  {{folder_err}}
+
+</div>
+{% endif %}
+    <table class="table is-fullwidth">
+      <thead>
+        <tr>
+          <th><abbr title="ID">#</abbr></th>
+          <th>Folder Name</th>
+          <th>Created By</abbr></th>
+          <th>Created On</abbr></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for f in folder reversed%}
+        <tr>
+          <td>{{f.id}}</td>
+          <td>
+            <p><a class="js-modal-trigger" aria-haspopup="true" data-target="modal-ter">{{f.name}}</a></p>
+          </td>
+          <td>{{f.created_by}}</td>
+          <td>{{f.created_on}}</td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+  <div class="is-divider-vertical"></div>
+  <div class="column ">
+    {% if config_err %}
+    <div class="notification is-danger  is-light">
+      <button class="delete"></button>
+    
+      {{config_err}}
+    
+    </div>
+    {% endif %}
+    <table class="table is-fullwidth">
+      <thead>
+        <tr>
+          <th><abbr title="ID">#</abbr></th>
+          <th>Config Name</th>
+          <th>Created By</abbr></th>
+          <th>Created On</abbr></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for c in config reversed%}
+        <tr>
+          <td>{{c.id}}</td>
+          <td>
+            <p><a class="js-modal-trigger" aria-haspopup="true" data-target="modal-ter">{{c.name}}</a></p>
+          </td>
+          <td>{{c.created_by}}</td>
+          <td>{{c.created_on}}</td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+{% endblock content %}
