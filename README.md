@@ -64,7 +64,4 @@ ObligationFlow is a Django-based web application designed to manage and analyze 
 - Update the `celery.py` configuration as needed for different environments.
 - The application assumes default configurations for simplicity; modify `settings.py` for production deployments.
 
-## License
-
-This project is licensed under the MIT License.
 
